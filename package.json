@@ -1,0 +1,16 @@
+{
+  "name": "x-ff",
+  "version": "1.0.0",
+  "description": "X のフォロー・フォロワーを手元で管理するツール",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "import": "node --disable-warning=ExperimentalWarning src/import-cli.js",
+    "test": "node --disable-warning=ExperimentalWarning --test \"test/*.test.js\"",
+    "demo": "node --disable-warning=ExperimentalWarning scripts/demo.js && PORT=4880 XFF_DB=data/demo.sqlite node --disable-warning=ExperimentalWarning src/server.js"
+  }
+}

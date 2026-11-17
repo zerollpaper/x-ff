@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="x-ff">
+<title>x-ff</title>
+<link rel="stylesheet" href="style.css">
+<script>
+  // 表示テーマ（ライト／ダーク）。選んでいなければ Mac の設定に合わせる。
+  // 画面が一瞬ちらつかないよう、読み込みの最初に当てる（この端末のブラウザにだけ覚える）
+  try {
+    const t = localStorage.getItem('xff-theme');
+    if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  } catch {}
+</script>
+</head>
+<body>
+<!-- 広い画面（1600px 以上）では X と同じ3列：左にタブ、真ん中に一覧、右に検索・絞り込み・まとめて操作。
+     狭い画面では1列に並ぶ（左・右の列の入れ物は消え、中身が上から順に並ぶ） -->
+<div class="app">
+<div class="leftcol">
+  <header class="top">
+    <div class="brand">
+      <h1>x-ff</h1>
+      <!-- 自分（アイコンと @ID）。押すと X の自分のプロフィールを開く。3列のときは左の列のいちばん下に出す -->
+      <a class="owner owner-top" target="_blank" rel="noopener noreferrer"><img class="owner-icon" alt="" referrerpolicy="no-referrer" hidden><span class="owner-name"></span></a>
+    </div>
+    <div id="stats" class="stats"></div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-view="unsorted">未入力 <span class="n" data-count="unsorted"></span></button>
+    <button data-view="candidates">整理候補 <span class="n" data-count="candidates"></span></button>
+    <button data-view="review">見直し <span class="n" data-count="review"></span></button>
+    <button data-view="following">フォロー中 <span class="n" data-count="following"></span></button>
+    <button data-view="followers">フォロワー <span class="n" data-count="followers"></span></button>
+    <button data-view="unfollowed">外した人 <span class="n" data-count="unfollowed"></span></button>
+    <button data-view="import">取り込み</button>
+    <button data-view="settings">設定</button>
+  </nav>
+  <a class="owner owner-bottom" target="_blank" rel="noopener noreferrer"><img class="owner-icon" alt="" referrerpolicy="no-referrer" hidden><span class="owner-name"></span></a>
+</div>
+
+<!-- 一覧の説明。1列のときは絞り込みの上、3列のときは真ん中の一覧の上に出す -->
+<p id="view-help" class="help" hidden></p>
+
+<aside id="side" class="rightcol" hidden>
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="名前・@ID・自己紹介・メモで検索（/）">
+      <select id="f-tag"><option value="">タグ：すべて</option><option value="__none">タグなし</option></select>
+      <select id="f-status">
+        <option value="">状態：すべて</option>
+        <option value="waiting">フォロバ待ち</option>
+        <option value="followed-back">相互</option>
+        <option value="loose">ゆるく保持</option>
+        <option value="protected">保護</option>
+      </select>
+      <select id="f-kind">
+        <option value="">種類：すべて</option>
+        <option value="celebrity">有名人</option>
+        <option value="creator">発信者</option>
+        <option value="official">公式・メディア</option>
+        <option value="general">一般</option>
+        <option value="__none">種類：未設定</option>
+      </select>
+      <select id="f-mutual">
+        <option value="">相互：すべて</option>
+        <option value="yes">相互だけ</option>
+        <option value="no">相互でないだけ</option>
+      </select>
+      <select id="f-fb">
+        <option value="">フォロバ宣言：すべて</option>
+        <option value="yes">フォロバ宣言あり</option>
+        <option value="no">フォロバ宣言なし</option>
+      </select>
+      <label id="show-dismissed-wrap" class="muted" hidden><input type="checkbox" id="show-dismissed"> 消した人も表示</label>
+      <span id="shown" class="muted"></span>
+    </div>
+    <div class="bulk" id="bulk">
+      <label class="selall"><input type="checkbox" id="sel-all"> 表示中を全選択</label>
+      <span id="sel-count" class="muted">0件選択</span>
+      <span class="bulk-actions">
+        <button data-bulk-status="waiting">フォロバ待ち</button>
+        <button data-bulk-status="loose">ゆるく保持</button>
+        <button data-bulk-status="protected">保護</button>
+        <span class="bulk-sep" aria-hidden="true"></span>
+        <button data-bulk-kind="celebrity">有名人</button>
+        <button data-bulk-kind="creator">発信者</button>
+        <button data-bulk-kind="official">公式・メディア</button>
+        <button data-bulk-kind="general">一般</button>
+        <span class="bulk-sep" aria-hidden="true"></span>
+        <button id="bulk-dismiss" hidden></button>
+        <button id="bulk-undismiss" hidden>選んだ人を一覧に戻す</button>
+        <button id="bulk-link" title="選んだアカウントを同じ人としてまとめる（フォロワーがいちばん多いものが本垢）">同じ人にまとめる</button>
+        <span class="bulk-sep" aria-hidden="true"></span>
+        <select id="bulk-tag" aria-label="付ける・外すタグ"><option value="">タグを選ぶ</option></select>
+        <button id="bulk-tag-add">タグを付ける</button>
+        <button id="bulk-tag-remove">タグを外す</button>
+      </span>
+    </div>
+</aside>
+
+<main>
+  <section id="list-view" hidden>
+    <ol id="rows" class="rows"></ol>
+    <p id="empty" class="empty" hidden></p>
+  </section>
+
+  <section id="import-view" class="panel" hidden>
+    <h2>取り込み</h2>
+    <p>xporter で出力した <strong>JSON</strong> を、ファイル名を変えずにこの画面へドラッグ＆ドロップしてください（どのタブにいても取り込めます）。フォローとフォロワーは同じタイミングで出力したものを一緒に入れてください。</p>
+    <p id="autoimport" class="autoimport" hidden></p>
+    <label class="filebtn">ファイルを選ぶ<input id="file" type="file" accept=".json,application/json" multiple hidden></label>
+    <div id="import-log" class="log"></div>
+    <h3>取り込み済みのファイル</h3>
+    <p class="help">取り込みの記録は、フォローを始めた日・外した日・相互が外れたことを判断するための履歴です。溜まっても消さずに残してください（容量はごくわずかです）。途中で止まったエクスポートや別のアカウントのファイルなど、<strong>間違えて取り込んだものだけ</strong>削除してください。</p>
+    <table class="table" id="snapshots"></table>
+  </section>
+
+  <section id="settings-view" class="panel" hidden>
+    <h2>設定</h2>
+    <form id="settings-form" class="settings">
+      <label>猶予期間 <input type="number" name="grace_days" min="0" max="3650" required> 日
+        <small>フォローしてからこの日数がたっても返ってこない「フォロバ待ち」の人を、整理候補に出します（記録を始める前からの人は最初の取り込みから、「まだ待つ」を押したり、ほかの状態からフォロバ待ちにしたりした人はそこから数えます）。種類が有名人・発信者・公式・メディアの人は出しません。</small></label>
+      <label>見直し期間 <input type="number" name="review_days" min="0" max="3650" required> 日
+        <small>「ゆるく保持」にしてから（見直しで「まだ保持」を押した人はそこから）この日数がたつと、見直しタブに出します。</small></label>
+      <label>FF比の色 <input type="number" name="ff_low" min="1" max="100" required> 〜 <input type="number" name="ff_high" min="100" max="100000" required> %
+        <small>FF比（フォロワー ÷ フォロー）がこの幅の中の人は「ほぼ同じ」として灰色のまま出します。上回る人（フォロワーの方がずっと多い）は青、下回る人（フォローの方がずっと多い）はピンクにします。</small></label>
+      <button type="submit">保存</button> <span id="settings-msg" class="muted"></span>
+    </form>
+
+    <h3>表示</h3>
+    <div class="settings">
+      <label>テーマ
+        <select id="theme">
+          <option value="">自動（Mac の設定に合わせる）</option>
+          <option value="light">ライト</option>
+          <option value="dark">ダーク</option>
+        </select>
+        <small>この端末のブラウザにだけ覚えます。</small></label>
+    </div>
+    <form id="owner-icon-form" class="settings">
+      <label>自分のアイコン <input name="url" type="url" placeholder="https://pbs.twimg.com/profile_images/…" class="owner-icon-in">
+        <small>取り込むファイルには自分のプロフィールが入っていないので、X で自分のアイコンを右クリックして「画像アドレスをコピー」し、ここに貼ってください。自分の @ID の横（3列のときは左の列のいちばん下）に出ます。アイコンを変えたら貼り直してください。空にして保存すると消えます。</small></label>
+      <button type="submit">保存</button>
+    </form>
+
+    <section id="lan-section" hidden>
+      <h3>スマホから使う</h3>
+      <p class="help" id="lan-help">同じ Wi-Fi のスマホで、次の合言葉付きのアドレスを開いてください（AirDrop やメモで送るか、QR コードにして読み取る）。一度開けば、以後はそのブラウザに合言葉が記憶されます。合言葉が入っているので、人には教えないでください。合言葉を変えたいときは data/.lan-token を消して起動し直します。</p>
+      <div id="lan-urls"></div>
+    </section>
+
+    <h3>タグ</h3>
+    <p class="help">「上の分類」を選ぶと、そのタグはその下の段に入ります（例：ホークスの上を NPB、NPB の上を野球にする）。段の数に制限はありません。下の段のタグを付けた人は、上の段で絞り込んだときにも出てきます。下の段が付いている人に、上の段は重ねて付きません。<br>名前を変えて既にあるタグと同じ名前にすると、2つが1つにまとまります。</p>
+    <form id="tag-create-form" class="tag-create">
+      <input name="tagname" placeholder="新しいタグの名前" aria-label="新しいタグの名前" maxlength="40" required>
+      <select name="parent" aria-label="上の分類"><option value="">上の分類：なし（いちばん上）</option></select>
+      <button type="submit">作る</button>
+    </form>
+    <div class="tree-actions"><button type="button" id="tags-expand">全部開く</button><button type="button" id="tags-collapse">全部たたむ</button></div>
+    <table class="table" id="tags"></table>
+
+    <h3>古い記録の削除</h3>
+    <p class="help">フォローもフォロワーも外れてから指定の日数以上たった人の記録を、タグ・メモごと削除します。今フォロー中・フォロワーの人は消えません。</p>
+    <form id="cleanup-form" class="settings">
+      <label><input type="number" name="days" min="0" value="365" required> 日以上たった記録を</label>
+      <button type="submit" class="danger">削除する</button> <span id="cleanup-msg" class="muted"></span>
+    </form>
+
+    <h3>キーボード操作</h3>
+    <dl class="keys">
+      <dt>↓ / ↑（j / k）</dt><dd>次の人・前の人</dd>
+      <dt>1 / 2 / 3</dt><dd>フォロバ待ち・ゆるく保持・保護（整理候補では 1 が「まだ待つ」、見直しでは 2 が「まだ保持」）</dd>
+      <dt>7 / 8 / 9 / 0</dt><dd>種類：有名人・発信者・公式・メディア・一般</dd>
+      <dt>e</dt><dd>本垢の行で、ほかのアカウント（サブ垢）を開く・閉じる</dd>
+      <dt>t</dt><dd>タグを足す欄へ（スペースで開く）</dd>
+      <dt>o</dt><dd>X でプロフィールを開く</dd>
+      <dt>x</dt><dd>選択の切り替え</dd>
+      <dt>/</dt><dd>検索へ</dd>
+      <dt>Esc</dt><dd>入力欄から抜ける</dd>
+    </dl>
+  </section>
+</main>
+</div>
+
+
+<div id="drop" class="drop" hidden><div>ここに JSON を離すと取り込みます</div></div>
+<div id="toast" class="toast" hidden></div>
+<template id="row-tpl">
+  <li class="row" tabindex="-1">
+    <input type="checkbox" class="sel" aria-label="選択">
+    <img class="avatar" alt="" loading="lazy" referrerpolicy="no-referrer">
+    <div class="who">
+      <div class="names"><button class="expand" type="button" hidden title="e：ほかのアカウントを開く・閉じる"></button><a class="name" target="_blank" rel="noopener noreferrer"></a> <span class="handle"></span> <span class="badges"></span></div>
+      <p class="bio"></p>
+      <div class="meta muted"></div>
+    </div>
+    <div class="side">
+      <div class="status" role="group" aria-label="状態">
+        <button data-status="waiting" title="1">フォロバ待ち</button><button data-status="loose" title="2">ゆるく保持</button><button data-status="protected" title="3">保護</button>
+      </div>
+      <div class="kind" role="group" aria-label="種類">
+        <button data-kind="celebrity" title="7：本業で知られる人（選手・芸能人・作家・記者・政治家）">有名人</button><button data-kind="creator" title="8：個人で継続して発信する人（YouTuber・解説・note・論客など）">発信者</button><button data-kind="official" title="9：組織や、中の人が前に出ない情報アカウント">公式・メディア</button><button data-kind="general" title="0：発言するだけの一般の人">一般</button>
+      </div>
+      <div class="tags"><span class="chips"></span><select class="tag-in" aria-label="タグを追加"><option value="">+タグ</option></select></div>
+      <input class="note" placeholder="メモ" aria-label="メモ">
+      <div class="dismiss-actions" hidden><button class="dismiss" type="button"></button></div>
+      <div class="group-actions" hidden>
+        <button class="copy-main" type="button" title="本垢の種類とタグを、このアカウントにも付ける（このアカウントのタグは残す）">本垢から貼り付け</button>
+        <button class="make-main" type="button" title="このアカウントを本垢にする">本垢にする</button>
+        <button class="unlink" type="button"></button>
+      </div>
+    </div>
+  </li>
+</template>
+<script type="module" src="app.js"></script>
+</body>
+</html>

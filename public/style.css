@@ -1,0 +1,450 @@
+/* x-ff の見た目。X（旧 Twitter）のユーザー一覧の使い心地に寄せる（ロゴ・名前は使わない）。
+   テーマは2つ：ライト（白）／ダーク（黒）。何も選ばなければ Mac の設定に合わせる。
+   状態の色（フォロバ待ち＝黄・ゆるく保持＝緑・保護＝紫）は意味があるので、テーマが変わっても残す。
+   X の差し色の青はリンク・選択中・主なボタンに使い、相互の印は色ではなく灰色の小さな札で示す。 */
+:root {
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --hover: rgba(15, 20, 25, 0.03);
+  --text: #0f1419;
+  --muted: #536471;
+  --line: #eff3f4;
+  --line-strong: #cfd9de;
+  --field: #eff3f4;
+  --accent: #1d9bf0;
+  --accent-soft: rgba(29, 155, 240, 0.1);
+  --waiting: #a37400;
+  --waiting-soft: rgba(255, 212, 0, 0.18);
+  --loose: #00a26b;
+  --loose-soft: rgba(0, 186, 124, 0.12);
+  --protected: #7856ff;
+  --protected-soft: rgba(120, 86, 255, 0.12);
+  --danger: #f4212e;
+  --ff-less: #f91880;
+  --danger-soft: rgba(244, 33, 46, 0.1);
+  --focus: #1d9bf0;
+  --tag: #0f1419;
+  --tag-soft: #eff3f4;
+  --shadow: rgba(101, 119, 134, 0.2);
+  /* 選ぶ欄の下矢印（文字の灰色と同じ色） */
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23536471' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  color-scheme: light;
+}
+/* ダーク（黒）：テーマを選んでいないときは Mac の設定に合わせる */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #000000;
+    --panel: #000000;
+    --hover: rgba(231, 233, 234, 0.03);
+    --text: #e7e9ea;
+    --muted: #71767b;
+    --line: #2f3336;
+    --line-strong: #536471;
+    --field: #202327;
+    --waiting: #ffd400;
+    --waiting-soft: rgba(255, 212, 0, 0.14);
+    --loose: #00ba7c;
+    --loose-soft: rgba(0, 186, 124, 0.14);
+    --protected: #a48cff;
+    --protected-soft: rgba(120, 86, 255, 0.18);
+    --tag: #e7e9ea;
+    --tag-soft: #202327;
+    --shadow: rgba(255, 255, 255, 0.2);
+    --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%2371767b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --panel: #000000;
+  --hover: rgba(231, 233, 234, 0.03);
+  --text: #e7e9ea;
+  --muted: #71767b;
+  --line: #2f3336;
+  --line-strong: #536471;
+  --field: #202327;
+  --waiting: #ffd400;
+  --waiting-soft: rgba(255, 212, 0, 0.14);
+  --loose: #00ba7c;
+  --loose-soft: rgba(0, 186, 124, 0.14);
+  --protected: #a48cff;
+  --protected-soft: rgba(120, 86, 255, 0.18);
+  --tag: #e7e9ea;
+  --tag-soft: #202327;
+  --shadow: rgba(255, 255, 255, 0.2);
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%2371767b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); }
+button, input, select { font: inherit; color: inherit; }
+
+/* ボタン：X と同じカプセル形。ふつうは枠だけ、フォームの送信ボタンは文字色で塗りつぶす */
+button {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: 9999px;
+  padding: 4px 14px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+button:hover { background: var(--hover); }
+button[type="submit"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+button[type="submit"]:hover { opacity: 0.9; background: var(--text); }
+input, select {
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 14px;
+}
+/* 選ぶ欄：ブラウザの矢印は丸い枠の端に寄ってしまうので消し、枠の内側に余白を取って自前の矢印を置く */
+select {
+  appearance: none; -webkit-appearance: none;
+  background: var(--bg) var(--chevron) no-repeat right 12px center / 12px 12px;
+  padding-right: 34px; text-overflow: ellipsis;
+}
+input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+input::placeholder { color: var(--muted); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+.muted { color: var(--muted); }
+.help { color: var(--muted); margin: 0; padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--line); }
+
+/* 画面全体：狭い画面では X のタイムラインのように、真ん中の1本の列にまとめて両脇に線を引く。
+   左の列（タブ）・右の列（検索・絞り込み・まとめて操作）の入れ物は消して、中身を上から順に並べる。
+   広い画面（1600px 以上）では下の @media で3列にする */
+.leftcol, .rightcol { display: contents; }
+.top, .tabs, #view-help, .toolbar, .bulk, main { max-width: 1040px; margin: 0 auto; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+
+.top {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px;
+  padding: 14px 16px 10px;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+/* 自分：アイコンと @ID を組にする（押すと X の自分のプロフィール） */
+.owner { display: inline-flex; align-items: center; gap: 8px; }
+.owner-icon { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--field); flex: none; }
+.owner-bottom { display: none; }
+.owner-icon-in { width: min(520px, 100%); }
+.brand h1 { font-size: 20px; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
+.owner { text-decoration: none; color: var(--muted); }
+.owner[href]:hover .owner-name { text-decoration: underline; }
+.stats { display: flex; flex-wrap: wrap; gap: 2px 16px; color: var(--muted); font-size: 14px; }
+.stats b { color: var(--text); font-weight: 700; }
+/* 数字の項目（「相互 4」など）と最終取り込みの塊は、途中で改行しない */
+.stats > span:not(.stat-latest), .stats .nb { white-space: nowrap; }
+
+/* タブ：X の上部タブ。選んでいるタブは太字で、文字の下に青い丸い線を出す */
+.tabs {
+  display: flex; overflow-x: auto; scrollbar-width: none;
+  border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button {
+  position: relative; flex: 1 0 auto; border: 0; border-radius: 0; background: none;
+  padding: 16px; white-space: nowrap; color: var(--muted); font-weight: 500; font-size: 15px;
+}
+.tabs button:hover { background: var(--hover); }
+.tabs button[aria-current="page"] { color: var(--text); font-weight: 700; }
+.tabs button[aria-current="page"]::after {
+  content: ''; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: 56px; height: 4px; border-radius: 9999px; background: var(--accent);
+}
+.tabs .n { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 2px; }
+
+main { padding: 0 0 80px; min-height: 100vh; }
+
+/* 検索と絞り込み */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+#q { flex: 1 1 260px; min-width: 0; background: var(--field); border-color: transparent; padding: 10px 18px; font-size: 15px; }
+#q:focus { background: var(--bg); border-color: var(--accent); }
+.toolbar select { font-size: 13px; padding: 6px 32px 6px 14px; }
+.toolbar label { font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+#shown { margin-left: auto; font-size: 14px; }
+
+/* まとめて操作：選んだ人に効くボタンを並べる */
+.bulk {
+  display: flex; flex-wrap: nowrap; align-items: center; gap: 8px 12px; padding: 8px 16px;
+  position: sticky; top: 55px; z-index: 4; border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+/* 1行に収め、入りきらない分は横に送る（2段になって一覧を隠さないように） */
+.selall { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; white-space: nowrap; flex: none; }
+#sel-count { font-size: 14px; white-space: nowrap; flex: none; }
+.bulk-actions { display: flex; flex-wrap: nowrap; gap: 6px; align-items: center; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: thin; padding: 2px 0; }
+.bulk-actions button { flex: none; white-space: nowrap; }
+.bulk-actions[aria-disabled="true"] { opacity: 0.4; pointer-events: none; }
+.bulk-actions button { padding: 3px 12px; font-size: 13px; }
+#bulk-tag { flex: none; width: auto; max-width: 180px; font-size: 13px; padding: 4px 30px 4px 12px; }
+.bulk-sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 2px; }
+
+/* 一覧の1行：X のユーザー一覧（アイコン・太字の名前・灰色の @ID・自己紹介） */
+.rows { list-style: none; margin: 0; padding: 0; }
+.row {
+  display: grid; grid-template-columns: auto 40px minmax(0, 1fr) minmax(260px, 320px); gap: 12px;
+  align-items: start; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
+  transition: background-color 0.15s;
+}
+.row:hover { background: var(--hover); }
+.row:focus, .row.current { outline: none; background: var(--hover); box-shadow: inset 3px 0 0 var(--accent); }
+.row .sel { margin-top: 12px; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--field); object-fit: cover; }
+.names { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; line-height: 20px; }
+.name { font-weight: 700; color: var(--text); text-decoration: none; overflow-wrap: anywhere; }
+.name:hover { text-decoration: underline; }
+.handle { color: var(--muted); }
+.badges { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.bio {
+  margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 20px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.meta { font-size: 13px; margin-top: 4px; }
+/* 1つの項目（「フォロワー 225,861」など）は途中で改行しない。項目が1行より長いときだけ中で折り返す */
+.meta > span { display: inline-block; }
+/* 区切りの「·」は前の項目の後ろに付け、行の頭に来ないようにする */
+.meta > span:not(:last-child)::after { content: '·'; margin-left: 4px; color: var(--muted); font-weight: 400; }
+/* FF比：100% 付近は灰色のまま。フォロワーがずっと多ければ青、フォローがずっと多ければピンク（状態の黄・緑・紫とぶつからない色） */
+.ff.more, .ff.less { font-weight: 600; }
+.ff.more { color: var(--accent); }
+.ff.less { color: var(--ff-less); }
+
+/* 自己紹介の全文カード（自己紹介にマウスを乗せたとき）：X のプロフィールのカードのように浮かせる */
+.hovercard {
+  position: fixed; z-index: 15; width: max-content; max-width: min(480px, calc(100vw - 24px));
+  background: var(--bg); color: var(--text); border-radius: 16px; padding: 14px 16px;
+  box-shadow: 0 0 15px var(--shadow), 0 0 3px 1px var(--shadow);
+}
+.hc-bio { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 20px; max-height: 50vh; overflow-y: auto; }
+.hc-url { display: block; margin-top: 8px; overflow-wrap: anywhere; text-decoration: none; }
+.hc-url:hover { text-decoration: underline; }
+.hc-meta { margin-top: 10px; }
+/* 自己紹介のリンク（URL・メールアドレス・@ID） */
+.bio-link { color: var(--accent); text-decoration: none; overflow-wrap: anywhere; }
+.bio-link:hover { text-decoration: underline; }
+
+/* 札：X の「フォローされています」と同じ、小さな灰色の札を基本にする */
+.badge {
+  display: inline-block; font-size: 12px; line-height: 16px; border-radius: 4px; padding: 1px 5px;
+  background: var(--field); color: var(--muted); border: 1px solid transparent; white-space: nowrap; font-weight: 500;
+}
+.badge.mutual { background: var(--field); color: var(--muted); }
+.badge.one { background: transparent; border-color: var(--line-strong); color: var(--muted); }
+.badge.broken { background: var(--danger-soft); color: var(--danger); }
+.badge.entered { background: var(--loose-soft); color: var(--loose); }
+.badge.fb { background: transparent; border: 1px dashed var(--line-strong); cursor: help; }
+.badge.maybe-same {
+  cursor: pointer; background: var(--accent-soft); color: var(--accent); border: 1px dashed var(--accent);
+  border-radius: 4px; padding: 1px 6px; font-size: 12px; font-weight: 600;
+}
+
+/* 右側：状態・種類・タグ・メモ */
+.side { display: flex; flex-direction: column; gap: 6px; }
+.status, .kind { display: flex; gap: 4px; }
+.status button, .kind button { flex: 1; padding: 3px 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.kind button { padding: 1px 4px; font-size: 12px; font-weight: 500; }
+/* 状態：押してある状態だけ、その色で塗る（フォロバ待ち＝黄・ゆるく保持＝緑・保護＝紫） */
+.status button[aria-pressed="true"][data-status="waiting"] { background: var(--waiting-soft); color: var(--waiting); border-color: var(--waiting); }
+.status button[aria-pressed="true"][data-status="loose"] { background: var(--loose-soft); color: var(--loose); border-color: var(--loose); }
+.status button[aria-pressed="true"][data-status="protected"] { background: var(--protected-soft); color: var(--protected); border-color: var(--protected); }
+/* 相互の人：状態は変えられないので、「相互」は灰色の印、ほかのボタンは薄くする */
+.status button.followed-back[aria-pressed="true"][data-status="waiting"] { background: var(--field); color: var(--text); border-color: var(--field); }
+.status button:disabled { cursor: default; opacity: 0.35; }
+.status button:disabled:hover { background: transparent; }
+.status button.followed-back:disabled { opacity: 1; }
+/* 種類：X の「フォロー」ボタンのように、選んでいるものを文字色で塗りつぶす（状態の色とぶつからない） */
+.kind button[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 700; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.chips { display: contents; }
+/* タグ：状態の色とぶつからない灰色の丸い札 */
+.chip {
+  display: inline-flex; align-items: center; gap: 2px; background: var(--tag-soft); color: var(--tag);
+  border-radius: 9999px; padding: 1px 2px 1px 10px; font-size: 13px; font-weight: 500;
+}
+.chip-parent { color: var(--muted); }
+.chip button { border: 0; background: none; padding: 0 6px; color: var(--muted); line-height: 1.4; font-size: 13px; }
+.chip button:hover { color: var(--danger); background: none; }
+/* タグを足す欄：絞り込みと同じ選ぶ欄。ふだんは薄い灰色で目立たせない */
+.tag-in { width: auto; max-width: 150px; font-size: 13px; padding: 2px 28px 2px 10px; background-color: var(--field); background-position: right 10px center; border-color: transparent; }
+.note { font-size: 13px; padding: 4px 12px; background: var(--field); border-color: transparent; border-radius: 8px; }
+.tag-in:focus, .note:focus { background-color: var(--bg); }
+
+.row.readonly { grid-template-columns: auto 40px minmax(0, 1fr); }
+.row.readonly .side { display: none; }
+.row.readonly .sel { visibility: hidden; }
+
+/* 同じ人の複数アカウント：サブ垢は本垢の下に、線でつないで少し右にずらす */
+.expand { font-size: 12px; padding: 0 8px; margin-right: 4px; color: var(--accent); border-color: var(--accent); }
+.row.sub { padding-left: 44px; position: relative; }
+.row.sub::before { content: ''; position: absolute; left: 34px; top: 0; bottom: 0; width: 2px; background: var(--line-strong); }
+.group-actions, .dismiss-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.group-actions button, .dismiss-actions button { font-size: 12px; padding: 2px 10px; color: var(--muted); }
+.dismiss-actions button { color: var(--text); }
+.empty { color: var(--muted); padding: 48px 16px; text-align: center; }
+
+/* 取り込み・設定 */
+.panel { padding: 16px; }
+.panel h2 { margin: 0 0 12px; font-size: 20px; font-weight: 800; }
+.panel h3 { margin: 32px 0 8px; font-size: 17px; font-weight: 800; }
+.panel .help { padding: 0 0 12px; border-bottom: 0; }
+.settings { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.settings label small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+.settings input[type="number"] { width: 96px; }
+.table { border-collapse: collapse; width: 100%; max-width: 820px; font-size: 14px; }
+.table td, .table th { border-bottom: 1px solid var(--line); padding: 8px; text-align: left; }
+.table th { color: var(--muted); font-weight: 600; font-size: 13px; }
+.table input, .table select { width: 100%; }
+.table button { white-space: nowrap; }
+/* タグの木：名前の列につなぎの線（│ ├ └）を引く。線が行の上下でつながるよう、名前の列だけ上下の余白をなくす */
+/* 新しいタグを作る欄 */
+.tag-create { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+.tag-create input { flex: 1 1 180px; max-width: 260px; }
+.tag-create select { flex: 0 1 auto; max-width: 100%; }
+.tree-actions { display: flex; gap: 8px; margin: 0 0 8px; }
+.tree-actions button { font-size: 13px; padding: 3px 12px; }
+#tags tr.tree-row td { height: 48px; padding-top: 0; padding-bottom: 0; }
+.tree-name { display: flex; align-items: stretch; height: 48px; }
+.tree-name input { align-self: center; flex: 1; min-width: 120px; }
+.tg { position: relative; flex: none; width: 22px; }
+.tg.pipe::before, .tg.tee::before, .tg.elbow::before {
+  content: ''; position: absolute; left: 10px; top: 0; bottom: 0; border-left: 1px solid var(--line-strong);
+}
+.tg.elbow::before { bottom: 50%; }
+.tg.tee::after, .tg.elbow::after {
+  content: ''; position: absolute; left: 10px; right: 0; top: 50%; border-top: 1px solid var(--line-strong);
+}
+.tg.toggle { display: flex; align-items: center; }
+.tg.toggle.open::after {
+  content: ''; position: absolute; left: 10px; top: calc(50% + 10px); bottom: 0; border-left: 1px solid var(--line-strong);
+}
+.tree-toggle {
+  position: relative; z-index: 1; flex: none; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%;
+  font-size: 10px; color: var(--muted); display: inline-flex; align-items: center; justify-content: center;
+}
+.tree-toggle:hover { background: var(--field); color: var(--text); }
+#tags td.tag-count { white-space: nowrap; }
+.tree-hidden { align-self: center; margin-left: 6px; font-size: 13px; white-space: nowrap; }
+.autoimport { padding: 10px 14px; border-radius: 12px; background: var(--accent-soft); margin: 0 0 14px; font-size: 14px; }
+.autoimport.err { background: var(--danger-soft); color: var(--danger); }
+.filebtn {
+  display: inline-block; border: 1px solid var(--text); background: var(--text); color: var(--bg);
+  border-radius: 9999px; padding: 6px 18px; cursor: pointer; font-weight: 700; font-size: 14px;
+}
+.log { margin: 12px 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.log .ok { color: var(--loose); }
+.log .warn { color: var(--waiting); }
+.log .err { color: var(--danger); }
+.danger, button.danger, button[type="submit"].danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+button.danger:hover { background: var(--danger-soft); }
+.lan-url { display: flex; align-items: center; gap: 8px; margin: 4px 0; flex-wrap: wrap; }
+.lan-url code { font-size: 13px; overflow-wrap: anywhere; background: var(--field); padding: 4px 10px; border-radius: 8px; }
+.keys { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; font-size: 14px; }
+.keys dt { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
+.keys dd { margin: 0; }
+
+.need-token { font-size: 16px; padding: 24px 16px; max-width: 640px; }
+.drop {
+  position: fixed; inset: 0; background: color-mix(in srgb, var(--accent) 18%, transparent);
+  display: grid; place-items: center; z-index: 20; font-size: 20px; font-weight: 700;
+}
+.drop div { background: var(--bg); border: 2px dashed var(--accent); border-radius: 16px; padding: 40px 60px; }
+/* お知らせ：X と同じく、下に出る青い帯 */
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 30;
+  background: var(--accent); color: #fff; padding: 12px 18px; border-radius: 6px; max-width: 90vw;
+  font-size: 15px; box-shadow: 0 0 15px var(--shadow);
+}
+.toast.err { background: var(--danger); }
+
+/* 広い画面：X と同じ3列。左にタブ、真ん中に一覧、右に検索・絞り込み・まとめて操作（左右は画面に貼り付ける） */
+@media (min-width: 1600px) {
+  .app {
+    /* 真ん中は広げすぎない（名前から右端のボタンまで目と手の動きが長くなるため）。3列のかたまりを画面の中央に寄せる */
+    display: grid; grid-template-columns: 240px minmax(0, 1100px) 320px; gap: 0 24px;
+    justify-content: center; padding: 0 24px; align-items: start;
+  }
+  .leftcol, .rightcol { display: block; position: sticky; top: 0; max-height: 100vh; overflow-y: auto; scrollbar-width: thin; }
+  .leftcol { grid-column: 1; grid-row: 1 / span 2; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 12px; }
+  /* 自分は X と同じく左の列のいちばん下に置く（上の行の分は隠す） */
+  .owner-top { display: none; }
+  .owner-bottom {
+    display: flex; margin-top: auto; padding: 12px; border-radius: 9999px; color: var(--text); font-weight: 700;
+  }
+  .owner-bottom[href]:hover { background: var(--hover); }
+  .owner-bottom .owner-icon { width: 40px; height: 40px; }
+  #view-help { grid-column: 2; grid-row: 1; max-width: none; margin: 0; }
+  main { grid-column: 2; grid-row: 2; max-width: none; margin: 0; }
+  .rightcol { grid-column: 3; grid-row: 1 / span 2; padding: 12px 0 24px; display: flex; flex-direction: column; gap: 16px; }
+  .rightcol[hidden] { display: none; }
+  .top, .tabs, .toolbar, .bulk { max-width: none; margin: 0; border-left: 0; border-right: 0; }
+
+  /* 左の列：名前と数字を縦に並べ、その下にタブを縦に並べる（人数は右寄せ） */
+  .top { flex-direction: column; align-items: flex-start; padding: 16px 12px 12px; gap: 10px; }
+  .stats { flex-direction: column; gap: 4px; font-size: 14px; }
+  .tabs {
+    flex-direction: column; position: static; overflow: visible; border-bottom: 0;
+    background: none; backdrop-filter: none; -webkit-backdrop-filter: none; gap: 2px;
+  }
+  .tabs button {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex: none;
+    padding: 12px 16px; border-radius: 9999px; font-size: 18px; color: var(--text); text-align: left;
+  }
+  .tabs button[aria-current="page"] { font-weight: 800; background: var(--field); }
+  .tabs button[aria-current="page"]::after { display: none; }
+  .tabs .n { font-size: 14px; }
+
+  /* 右の列：検索と絞り込みを縦に並べる */
+  .toolbar { flex-direction: column; align-items: stretch; padding: 0; border-bottom: 0; gap: 10px; }
+  #q { flex: none; }
+  .toolbar select { width: 100%; font-size: 14px; padding: 8px 34px 8px 16px; }
+  #shown { margin-left: 0; }
+  /* まとめて操作：枠で囲み、状態・種類・ほか・タグの組ごとに段を分ける */
+  .bulk {
+    position: static; flex-wrap: wrap; padding: 14px 16px; gap: 10px 12px;
+    border: 1px solid var(--line); border-radius: 16px; background: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  .bulk-actions { flex: 1 1 100%; flex-wrap: wrap; overflow: visible; }
+  .bulk-sep { flex-basis: 100%; height: 0; margin: 2px 0; background: none; }
+  #bulk-tag { flex: 1 1 100%; max-width: none; }
+
+  /* 真ん中の一覧が十分に広いときは、右側の操作欄を広げて2段（状態＋種類／タグ＋メモ）にする */
+  .rows { container-type: inline-size; }
+}
+@container (min-width: 1040px) {
+  .row { grid-template-columns: auto 40px minmax(0, 1fr) 540px; }
+  .side { display: grid; grid-template-columns: 5fr 6fr; gap: 6px 8px; align-items: center; }
+  .side > .dismiss-actions, .side > .group-actions { grid-column: 1 / -1; }
+}
+
+@media (max-width: 760px) {
+  .top, .tabs, main { border-left: 0; border-right: 0; }
+  .top { padding: 12px 12px 8px; }
+  .tabs button { padding: 14px 12px; font-size: 14px; }
+  .toolbar, .bulk, .help { padding-left: 12px; padding-right: 12px; }
+  .bulk { position: static; flex-wrap: wrap; }
+  .bulk-actions { flex: 1 1 100%; flex-wrap: wrap; overflow: visible; }
+  .row { grid-template-columns: auto 40px minmax(0, 1fr); padding: 12px; }
+  .side { grid-column: 2 / -1; }
+  .row.sub { padding-left: 28px; }
+  .row.sub::before { left: 18px; }
+  .panel { padding: 12px; }
+  /* スマホ：タグの表の行が高くならないよう（木の線が切れないよう）、直接の人数を隠し、欄を少し細くする */
+  #tags .direct { display: none; }
+  .tree-name input { min-width: 80px; }
+  #tags select { min-width: 96px; }
+}

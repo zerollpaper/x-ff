@@ -1,0 +1,10 @@
+# 個人データ（xporter の出力と、取り込んだデータベース）
+XPorter_*
+*.json.bak
+data/
+node_modules/
+.DS_Store
+
+# 使う人ごとの運用の決まりと、この Mac の開発用の設定（公開しない）
+AGENTS.local.md
+.claude/

@@ -1,0 +1,6 @@
+{
+  "test": ["npm", "test", "--silent"],
+  "timeout": 60,
+  "locked": [],
+  "max_rounds": 3
+}
