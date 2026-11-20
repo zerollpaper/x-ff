@@ -6,7 +6,9 @@
 //   （昔のエクスポートが残っていても、履歴の最初に割り込ませないため）。
 // - Chrome は .crdownload に書いてから名前を変えるので、名前が対象の形になった時点で中身は揃っている。
 //   念のため少し待ってから読み、JSON として読めなければ何回か読み直す。
-import { readdirSync, readFileSync, watch } from 'node:fs';
+// - 取り込めたファイル（同じものが取り込み済みだった場合も）は、中身がデータに入ったので消す。
+//   別のアカウントのものなど、取り込めなかったファイルは確かめられるように残す。
+import { readdirSync, readFileSync, unlinkSync, watch } from 'node:fs';
 import { join } from 'node:path';
 import { parseExportFilename, UserError } from './store.js';
 
@@ -58,8 +60,16 @@ export function createAutoImporter(store, { dir, delayMs = 1500, retries = 3, lo
       result = { filename: name, error: e.message };
     }
     remember(name);
+    if (!result.error) {
+      try {
+        unlinkSync(join(dir, name));
+        result.removed = true;
+      } catch (e) {
+        if (e.code !== 'ENOENT') log(`x-ff 自動取り込み: ${name} を消せませんでした（${e.message}）`);
+      }
+    }
     status.last = { ...result, at: store.now().toISOString() };
-    log(`x-ff 自動取り込み: ${name} → ${result.error ?? (result.duplicate ? '取り込み済み' : `${result.count}人`)}`);
+    log(`x-ff 自動取り込み: ${name} → ${result.error ?? (result.duplicate ? '取り込み済み' : `${result.count}人`)}${result.removed ? '（ファイルは消しました）' : ''}`);
     return result;
   }
 

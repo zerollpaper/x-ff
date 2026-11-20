@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
@@ -37,6 +37,20 @@ describe('ダウンロードフォルダの自動取り込み', () => {
     assert.equal(ai.status().last.filename, name('following', '2026-01-01'));
   });
 
+  it('取り込んだファイルは消し、取り込み済みだったファイルも消す', () => {
+    const { dir, store, put, ai } = setup();
+    put(name('following', '2026-01-01'), [1, 2]);
+    assert.equal(ai.handle(name('following', '2026-01-01')).removed, true);
+    assert.ok(!existsSync(join(dir, name('following', '2026-01-01'))));
+    // 同じ中身を別名で保存した（取り込み済みだった）ものも消す
+    put('XPorter_following_me_exported_2026-01-01-at-12-00-00 (1).json', [1, 2]);
+    const dup = ai.handle('XPorter_following_me_exported_2026-01-01-at-12-00-00 (1).json');
+    assert.equal(dup.duplicate, true);
+    assert.equal(dup.removed, true);
+    assert.ok(!existsSync(join(dir, 'XPorter_following_me_exported_2026-01-01-at-12-00-00 (1).json')));
+    assert.equal(store.listSnapshots().length, 1);
+  });
+
   it('起動時は、取り込み済みより新しいファイルだけを古い順に取り込む', () => {
     const { store, put, ai } = setup();
     put(name('following', '2026-01-05'), [1, 2]);
@@ -72,12 +86,14 @@ describe('ダウンロードフォルダの自動取り込み', () => {
   });
 
   it('別のアカウントのファイルは取り込まず、理由を残す', () => {
-    const { store, put, ai } = setup();
+    const { dir, store, put, ai } = setup();
     put(name('following', '2026-01-01'), [1]);
     ai.handle(name('following', '2026-01-01'));
     put(name('following', '2026-01-02', 'someone'), [1]);
     const r = ai.handle(name('following', '2026-01-02', 'someone'));
     assert.ok(r.error);
+    assert.ok(!r.removed);
+    assert.ok(existsSync(join(dir, name('following', '2026-01-02', 'someone')))); // 取り込めなかったものは残す
     assert.equal(store.listSnapshots().length, 1);
     assert.equal(ai.handle(name('following', '2026-01-02', 'someone')), null);
   });

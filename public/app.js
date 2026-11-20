@@ -1047,7 +1047,7 @@ async function renderAutoImport() {
     : 'まだ自動で取り込んだファイルはありません。';
   el.textContent = s.error
     ? s.error
-    : `「${s.dir}」を見張っています。xporter で JSON を出力すると、ここにドラッグしなくても自動で取り込みます。${last}`;
+    : `「${s.dir}」を見張っています。xporter で JSON を出力すると、ここにドラッグしなくても自動で取り込み、取り込んだファイルは消します。${last}`;
 }
 
 async function renderImport() {
